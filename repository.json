@@ -1,12 +1,12 @@
 {
   "format_version": 1,
-  "name": "Neues NWN Modul",
-  "description": "Kurze Beschreibung des Moduls",
+  "name": "NWN NUI builder module",
+  "description": "NUI_build",
   "header_image": "assets/header_image.jpg",
   "modules": [
     {
-      "name": "Neues NWN Modul",
-      "description": "Kurze Beschreibung des Moduls",
+      "name": "NWN NUI builder module",
+      "description": "NUI_build",
       "header_image": "assets/header_image.jpg",
       "screenshots": [],
       "versions": []
