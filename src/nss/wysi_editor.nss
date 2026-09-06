@@ -116,7 +116,7 @@ json BuildPreviewWindow(json jElements)
     return NuiWindow(
         jRoot,
         JsonString("Preview (live)"),
-        NuiRect(440.0, 10.0, 350.0, 500.0),
+        NuiBind("geometry"),  // set explicitly via NuiSetBind after NuiCreate() -- see RefreshPreview()
         JsonBool(TRUE),   // resizable
         JsonBool(FALSE),  // collapsed
         JsonBool(TRUE),   // closable
@@ -124,17 +124,40 @@ json BuildPreviewWindow(json jElements)
         JsonBool(TRUE));  // border
 }
 
+// Fixed home position for the preview window. Kept as one constant so
+// "back to the original spot" always means the same thing.
+const float WYSI_PREVIEW_X = 440.0;
+const float WYSI_PREVIEW_Y = 10.0;
+const float WYSI_PREVIEW_W = 350.0;
+const float WYSI_PREVIEW_H = 500.0;
+
 // Destroys the current preview window (if any) and rebuilds it from scratch.
-// This is the "rebuild on change" core of the prototype.
+// This is the "rebuild on change" core of the prototype. The window's
+// current geometry is captured just before destroying it and restored right
+// after recreating it -- so the player's own placement survives every
+// rebuild. Only the very first open (no previous window) falls back to the
+// fixed home position.
 void RefreshPreview(object oPC)
 {
     int nOldToken = GetLocalInt(oPC, WYSI_LOCAL_TOKEN);
+
+    json jGeometry = JsonNull();
     if (nOldToken != 0)
+    {
+        jGeometry = NuiGetBind(oPC, nOldToken, "geometry");
         NuiDestroy(oPC, nOldToken);
+    }
+    if (JsonGetType(jGeometry) == JSON_TYPE_NULL)
+        jGeometry = NuiRect(WYSI_PREVIEW_X, WYSI_PREVIEW_Y, WYSI_PREVIEW_W, WYSI_PREVIEW_H);
 
     json jElements = GetElements(oPC);
     json jWindow   = BuildPreviewWindow(jElements);
     int  nNewToken = NuiCreate(oPC, jWindow, WYSI_PREVIEW_WND);
+
+    // Restore exactly the geometry captured a moment ago (or the fixed
+    // home position on first open) -- overrides whatever the client would
+    // otherwise remember/default to for this window ID.
+    NuiSetBind(oPC, nNewToken, "geometry", jGeometry);
 
     // Snapshot the data that produced this window ON the window itself.
     // This decouples "what's shown" from "what we think we saved" and
