@@ -226,12 +226,13 @@ void OpenEditor(object oPC)
     jInput = NuiId(jInput, "input_text");
     jInput = NuiHeight(jInput, 35.0);
 
-    json jBtnLabel  = NuiId(NuiButton(JsonString("+ Label")),    "add_label");
-    json jBtnButton = NuiId(NuiButton(JsonString("+ Button")),   "add_button");
-    json jBtnCheck  = NuiId(NuiButton(JsonString("+ Checkbox")), "add_check");
-    json jBtnClear  = NuiId(NuiButton(JsonString("Clear all")),  "clear_all");
-    json jBtnExport = NuiId(NuiButton(JsonString("Export")),     "export_json");
-    json jBtnCheckS = NuiId(NuiButton(JsonString("Self-Check")), "self_check");
+    json jBtnLabel   = NuiId(NuiHeight(NuiWidth(NuiButton(JsonString("+ Label")),  115.0), 32.0), "add_label");
+    json jBtnButton  = NuiId(NuiHeight(NuiWidth(NuiButton(JsonString("+ Button")), 115.0), 32.0), "add_button");
+    json jBtnCheck   = NuiId(NuiHeight(NuiWidth(NuiButton(JsonString("+ Chk")),    115.0), 32.0), "add_check");
+    json jBtnClear   = NuiId(NuiHeight(NuiWidth(NuiButton(JsonString("Clear")),    115.0), 32.0), "clear_all");
+    json jBtnExport  = NuiId(NuiHeight(NuiWidth(NuiButton(JsonString("Export")),   115.0), 32.0), "export_json");
+    json jBtnCheckS  = NuiId(NuiHeight(NuiWidth(NuiButton(JsonString("Verify")),   115.0), 32.0), "self_check");
+    json jBtnRefresh = NuiId(NuiHeight(NuiWidth(NuiButton(JsonString("Update")),   115.0), 32.0), "refresh_preview");
 
     json jRowInput = JsonArray();
     jRowInput = JsonArrayInsert(jRowInput, jInput);
@@ -246,17 +247,21 @@ void OpenEditor(object oPC)
     jRowClear = JsonArrayInsert(jRowClear, jBtnExport);
     jRowClear = JsonArrayInsert(jRowClear, jBtnCheckS);
 
+    json jRowRefresh = JsonArray();
+    jRowRefresh = JsonArrayInsert(jRowRefresh, jBtnRefresh);
+
     json jColList = JsonArray();
     jColList = JsonArrayInsert(jColList, NuiRow(jRowInput));
     jColList = JsonArrayInsert(jColList, NuiRow(jRowPalette));
     jColList = JsonArrayInsert(jColList, NuiRow(jRowClear));
+    jColList = JsonArrayInsert(jColList, NuiRow(jRowRefresh));
 
     json jRoot = NuiCol(jColList);
 
     json jWindow = NuiWindow(
         jRoot,
         JsonString("WYSIWYG Editor (Prototype)"),
-        NuiRect(20.0, 10.0, 400.0, 200.0),
+        NuiRect(20.0, 10.0, 420.0, 260.0),
         JsonBool(FALSE),  // resizable
         JsonBool(FALSE),  // collapsed
         JsonBool(TRUE),   // closable
@@ -309,6 +314,8 @@ void HandleWysiEditorEvent()
         ExportWysiState(oPC);
     else if (sElem == "self_check")
         ValidateWysiState(oPC);
+    else if (sElem == "refresh_preview")
+        RefreshPreview(oPC);
 }
 
 /* Fallback entry point if this file is used standalone as the OnNUIEvent script.
