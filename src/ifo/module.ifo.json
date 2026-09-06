@@ -124,13 +124,17 @@
   },
   "Mod_OnModLoad": {
     "type": "resref",
-    "value": "x2_mod_def_load"
+    "value": "load_mod"
   },
   "Mod_OnModStart": {
     "type": "resref",
     "value": ""
   },
-  "Mod_OnPlrChat": {
+  "Mod_OnNuiEvent": {
+    "type": "resref",
+    "value": "wysi_editor"
+  },
+   "Mod_OnPlrChat": {
     "type": "resref",
     "value": ""
   },
