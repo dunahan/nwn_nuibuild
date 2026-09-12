@@ -10,11 +10,52 @@ jobs:
     permissions:
       contents: write
 
+    env:
+      NWNSERVER_VERSION: "8193.37-15"
+      NWN_ROOT: ${{ github.workspace }}/nwn
+      NWN_HOME: ${{ github.workspace }}/nwn
+
     runs-on: ubuntu-latest
     name: 'NWN:EE CI Build'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # nasher/nwnsc brauchen zum Kompilieren der Skripte einen Teil der
+      # offiziellen NWN-Serverdaten (nwscript.nss, Standard-Includes etc.).
+      # Gleiche offizielle Quelle, die auch das nasher4gh-Docker-Image nutzt:
+      # https://github.com/Ardesco/nasher4gh-images/blob/main/Dockerfile
+      - name: Cache NWN server data
+        id: cache-nwn
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NWN_ROOT }}
+          key: nwn-server-${{ env.NWNSERVER_VERSION }}
+
+      - name: Download NWN server data
+        if: steps.cache-nwn.outputs.cache-hit != 'true'
+        run: |
+          wget -q "https://nwn.beamdog.net/downloads/nwnee-dedicated-${NWNSERVER_VERSION}.zip"
+          mkdir -p "$NWN_ROOT"
+          unzip -q "nwnee-dedicated-${NWNSERVER_VERSION}.zip" -d "$NWN_ROOT"
+          rm "nwnee-dedicated-${NWNSERVER_VERSION}.zip"
+
+      # nasher nutzt seit Version 1.0.0 standardmaessig neverwinter.nim's
+      # nwn_script_comp als Compiler statt des aelteren, separaten nwnsc -
+      # genau der Compiler, den du hier haben willst, da er mit EE aktiv
+      # weiterentwickelt wird. Wir holen ihn als fertiges Release-Binary,
+      # dieselbe Quelle wie bei den nwsync-Tools weiter unten.
+      - name: Install nwn_script_comp
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir scriptcomp_tools
+          gh release download -R niv/neverwinter.nim --pattern "*linux*" -D scriptcomp_tools
+          cd scriptcomp_tools
+          for f in *.zip; do [ -e "$f" ] && unzip -o "$f"; done
+          for f in *.tar.gz; do [ -e "$f" ] && tar xzf "$f"; done
+          sudo mv nwn_script_comp /usr/local/bin/nwn_script_comp
+          sudo chmod +x /usr/local/bin/nwn_script_comp
 
       - name: Setup Nim
         uses: jiro4989/setup-nim-action@v2
@@ -35,7 +76,7 @@ jobs:
         run: nimble install nasher -y
 
       - name: Build module
-        run: nasher pack --default -usenwnscriptcomp
+        run: nasher pack --default
 
       - name: Get current date
         id: date
