@@ -16,10 +16,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build module
-        uses: Ardesco/nasher4gh@v1
+      - name: Setup Nim
+        uses: jiro4989/setup-nim-action@v2
         with:
-          args: '[''pack'', ''--default'', ''-usenwnscriptcomp'']'
+          nim-version: stable
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Cache fuer ~/.nimble: nasher + neverwinter.nim werden aus dem
+      # Quellcode kompiliert, das kostet beim allerersten Lauf ein paar
+      # Minuten. Mit Cache-Treffer faellt das danach wieder weg.
+      - name: Cache nimble packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nimble
+          key: ${{ runner.os }}-nimble-nasher
+
+      - name: Install nasher
+        run: nimble install nasher -y
+
+      - name: Build module
+        run: nasher pack --default -usenwnscriptcomp
 
       - name: Get current date
         id: date
